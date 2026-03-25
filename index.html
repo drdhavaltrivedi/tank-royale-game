@@ -243,7 +243,7 @@
             <button class="btn btn-join"  id="joinBtn"  title="Join a friend's room">↗ Join</button>
         </div>
 
-        <div class="divider">multiplayer</div>
+        <div class="divider" id="mpDivider">multiplayer</div>
 
         <!-- Network section (host/join) -->
         <div id="networkSection" style="display:none">
@@ -570,5 +570,13 @@ chatInput.onkeydown = e => {
 };
 </script>
 
+    <script>
+        // Check if deployed directly on Vercel (which does not support WebSocket servers)
+        if (window.location.hostname.includes('vercel.app')) {
+            document.getElementById('hostBtn').style.display = 'none';
+            document.getElementById('joinBtn').style.display = 'none';
+            document.getElementById('mpDivider').style.display = 'none';
+        }
+    </script>
 </body>
 </html>
