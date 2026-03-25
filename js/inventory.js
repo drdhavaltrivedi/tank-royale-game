@@ -19,7 +19,7 @@ export class Inventory {
     handleMouse(mouseX, mouseY, mouseDown, clicked, player) {
         if (!this.isOpen) return;
 
-        const slots = this.getSlotRects(player);
+        const slots = this.getSlotRects(canvas, player);
         this.hoveredSlot = -1;
 
         for (let i = 0; i < slots.length; i++) {
@@ -55,11 +55,12 @@ export class Inventory {
         return null;
     }
 
-    getSlotRects(player) {
-        const cx = 325; // center x of inventory
-        const baseY = 120;
-        const slotW = 180;
-        const slotH = 50;
+    getSlotRects(canvas, player) {
+        const isMobile = canvas.width < 800;
+        const cx = canvas.width / 2;
+        const baseY = canvas.height / 2 - (isMobile ? 120 : 150);
+        const slotW = isMobile ? 140 : 180;
+        const slotH = isMobile ? 40 : 50;
         const gap = 8;
 
         const slots = [];
@@ -78,10 +79,11 @@ export class Inventory {
     draw(ctx, canvas, player) {
         if (!this.isOpen) return;
 
+        const isMobile = canvas.width < 800;
         const cx = canvas.width / 2;
         const cy = canvas.height / 2;
-        const panelW = 420;
-        const panelH = 380;
+        const panelW = isMobile ? canvas.width * 0.9 : 420;
+        const panelH = isMobile ? canvas.height * 0.8 : 380;
         const panelX = cx - panelW / 2;
         const panelY = cy - panelH / 2;
 

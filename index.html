@@ -11,7 +11,7 @@
         *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
         body { background:#000; overflow:hidden; font-family:'Rajdhani','Arial',sans-serif; }
 
-        canvas { display:block; width:100vw; height:100vh; cursor:none; }
+        canvas { display:block; width:100vw; height:100vh; cursor:none; touch-action:none; }
 
         /* ── Lobby overlay ─────────────────────────────────────────────────── */
         #lobby {
@@ -38,6 +38,17 @@
             padding:38px 44px 34px;
             box-shadow:0 0 60px rgba(0,120,255,.18), 0 0 0 1px rgba(255,255,255,.04) inset;
             backdrop-filter:blur(12px);
+            max-height: 95vh;
+            overflow-y: auto;
+        }
+
+        @media (max-width: 600px) {
+            #lobbyPanel { padding: 20px 25px; }
+            .logo { font-size: 28px; }
+            .btn { padding: 10px; font-size: 12px; }
+            .row { flex-direction: column; gap: 0; }
+            .field-group { margin-bottom: 12px; }
+            #roomCodeText { font-size: 22px; }
         }
 
         .logo {

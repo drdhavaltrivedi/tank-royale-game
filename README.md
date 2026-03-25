@@ -9,6 +9,7 @@ A fast-paced, 2D top-down Battle Royale game built with Vanilla JavaScript and H
 - **Dynamic Zone**: A shrinking circle that forces players together.
 - **Tank Classes**: Choose between Light, Medium, and Heavy tanks with unique stats.
 - **Weapon Looting**: Find ARs, Snipers, Shotguns, and more across the map.
+- **Mobile Responsive**: Fully playable on smartphones and tablets with virtual joysticks and touch controls.
 - **Smart Bots**: AI bots that can loot, drive, and fight tactically.
 - **Vehicles & Airdrops**: Drive cars and bikes, or hunt for high-tier loot in airdrops.
 - **Weather & Environment**: Fog, rain, and interactable buildings/doors.
@@ -37,21 +38,33 @@ To use Vercel for the frontend while keeping multiplayer functional:
 3. *Note: For the best experience, host with a local development server.*
 
 ## ⌨️ Controls
+
+### Desktop
 | Action | Key |
 |---|---|
 | Move | WASD / Arrows |
 | Aim & Shoot | Mouse |
-| Switch Weapon | 1 & 2 |
+| Switch Weapon | 1 & 2 / Q |
 | Reload | R |
 | Crouch / Prone | C / Z |
 | Sprint | Shift |
 | Inventory | Tab |
 | Interact (Vehicle/Loot/Door) | E / F |
 | Healing | 3 / 4 |
-| Throwables (Grenade/Smoke/Mine) | G / H / M |
+| Throwables | G / H / M |
+
+### Mobile
+- **Left Joystick**: Movement & Steering
+- **Right Area**: Aiming & Turret Rotation
+- **🔥 Button**: Fire Weapon
+- **⟳ Button**: Reload
+- **🎒 Button**: Open Inventory
+- **F Button**: Pick up loot / Enter Vehicle
+- **➕ Button**: Use Healing Items
 
 ## 🛠️ Built With
 - **Language**: Vanilla JavaScript (ES6+ Modules)
 - **Rendering**: HTML5 Canvas API
-- **Styling**: Minimalist CSS for fullscreen optimization
+- **Input**: Dual virtual joysticks for mobile + keyboard/mouse for desktop
 - **AI**: Custom steering and state-machine-based bot logic
+- **Sync**: Deterministic PRNG and WebSocket event synchronization

@@ -294,7 +294,12 @@ export class Player {
         if (input.isKeyDown('a') || input.isKeyDown('arrowleft')) mx = -1;
         if (input.isKeyDown('d') || input.isKeyDown('arrowright')) mx = 1;
 
-        if (mx !== 0 && my !== 0) {
+        if (input.joystick.active) {
+            mx = input.joystick.dx;
+            my = input.joystick.dy;
+        }
+
+        if (mx !== 0 && my !== 0 && !input.joystick.active) {
             mx *= 0.707;
             my *= 0.707;
         }
@@ -473,7 +478,7 @@ export class Player {
         // Can't shoot while sprinting
         if (this.sprinting) return;
 
-        if (input.mouse.down) {
+        if (input.mouse.down || input.isButtonPressed('fire')) {
             const w = this.currentWeapon;
             if (time - this.lastFireTime >= w.fireRate / 1000) {
                 if (w.ammo <= 0) {

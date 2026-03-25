@@ -1146,7 +1146,7 @@ export class Game {
 
         // Weather overlay
         this.weather.draw(this.ctx, this.canvas);
-        this.hud.draw(this.ctx, this.canvas, this.player, this.aliveCount, this.zone);
+        this.hud.draw(this.ctx, this.canvas, this.player, this.aliveCount, this.zone, this.input);
         this.minimap.draw(this.ctx, this.canvas, this.player, this.bots, this.zone, this.airdrop, this.vehicles);
 
         // --- Dynamic Crosshair ---
@@ -1373,47 +1373,49 @@ export class Game {
         }
 
         // Glowing title
+        const isMobile = W < 800;
+        const scale = isMobile ? 0.7 : 1.0;
         const titlePulse = (Math.sin(t * 1.5) + 1) * 0.5;
         ctx.save();
         ctx.shadowColor = `rgba(255,200,0,${0.6 + titlePulse * 0.4})`;
-        ctx.shadowBlur = 30 + titlePulse * 20;
+        ctx.shadowBlur = (30 + titlePulse * 20) * scale;
         ctx.fillStyle = '#f5c842';
-        ctx.font = `bold 64px Orbitron, Arial`;
+        ctx.font = `bold ${64 * scale}px Orbitron, Arial`;
         ctx.textAlign = 'center';
-        ctx.fillText('TANK ROYALE', cx, cy - 140);
+        ctx.fillText('TANK ROYALE', cx, cy - 140 * scale);
         ctx.restore();
 
         // Subtitle
         ctx.fillStyle = 'rgba(0,200,255,0.7)';
-        ctx.font = '14px Rajdhani, Arial';
+        ctx.font = `${14 * scale}px Rajdhani, Arial`;
         ctx.textAlign = 'center';
-        ctx.fillText('BATTLE UNTIL ONE REMAINS', cx, cy - 108);
+        ctx.fillText('BATTLE UNTIL ONE REMAINS', cx, cy - 108 * scale);
 
         // Horizontal divider
         ctx.strokeStyle = 'rgba(255,200,0,0.3)';
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(cx - 200, cy - 95);
-        ctx.lineTo(cx + 200, cy - 95);
+        ctx.moveTo(cx - 200 * scale, cy - 95 * scale);
+        ctx.lineTo(cx + 200 * scale, cy - 95 * scale);
         ctx.stroke();
 
         // Map theme selector
         const theme = MAP_THEMES[this.themeNames[this.selectedTheme]];
         ctx.fillStyle = '#5af';
-        ctx.font = 'bold 16px Rajdhani, Arial';
-        ctx.fillText(`◀  MAP: ${theme.name}  ▶`, cx, cy - 72);
+        ctx.font = `bold ${16 * scale}px Rajdhani, Arial`;
+        ctx.fillText(`◀  MAP: ${theme.name}  ▶`, cx, cy - 72 * scale);
         ctx.fillStyle = 'rgba(255,255,255,0.3)';
-        ctx.font = '11px Rajdhani, Arial';
-        ctx.fillText('A / D  ·  Change Map', cx, cy - 54);
+        ctx.font = `${11 * scale}px Rajdhani, Arial`;
+        ctx.fillText('A / D  ·  Change Map', cx, cy - 54 * scale);
 
         // Game mode selector
         const mode = this.gameModes[this.selectedMode];
         ctx.fillStyle = '#fca';
-        ctx.font = 'bold 16px Rajdhani, Arial';
-        ctx.fillText(`◀  MODE: ${mode.name}  ▶`, cx, cy - 26);
+        ctx.font = `bold ${16 * scale}px Rajdhani, Arial`;
+        ctx.fillText(`◀  MODE: ${mode.name}  ▶`, cx, cy - 26 * scale);
         ctx.fillStyle = '#aaa';
-        ctx.font = '12px Rajdhani, Arial';
-        ctx.fillText(mode.desc, cx, cy - 10);
+        ctx.font = `${12 * scale}px Rajdhani, Arial`;
+        ctx.fillText(mode.desc, cx, cy - 10 * scale);
         ctx.fillStyle = 'rgba(255,255,255,0.3)';
         ctx.font = '11px Rajdhani, Arial';
         ctx.fillText('W / S  ·  Change Mode', cx, cy + 6);
@@ -1423,18 +1425,15 @@ export class Game {
         const classData = TANK_CLASSES[className];
         const classColors = { light: '#6aaa50', medium: '#5a8a40', heavy: '#4a7a3a' };
         ctx.fillStyle = classColors[className] || '#6c8';
-        ctx.font = 'bold 16px Rajdhani, Arial';
-        ctx.fillText(`◀  CLASS: ${classData.name.toUpperCase()}  ▶`, cx, cy + 30);
+        ctx.font = `bold ${16 * scale}px Rajdhani, Arial`;
+        ctx.fillText(`◀  CLASS: ${classData.name.toUpperCase()}  ▶`, cx, cy + 30 * scale);
         ctx.fillStyle = '#888';
-        ctx.font = '11px Rajdhani, Arial';
-        ctx.fillText(`Speed: ${classData.speed}  |  HP: ${classData.hp}  |  Dmg: ${classData.dmgMult}x  |  Reduce: ${(classData.dmgReduction * 100) | 0}%`, cx, cy + 46);
-        ctx.fillStyle = 'rgba(255,255,255,0.3)';
-        ctx.fillText('Q / E  ·  Change Class', cx, cy + 60);
-
-        // Play button — animated gradient
-        const btnW = 240, btnH = 54;
+        ctx.font = `${11 * scale}px Rajdhani, Arial`;
+        ctx.fillText(`Speed: ${classData.speed}  |  HP: ${classData.hp}`, cx, cy + 46 * scale);
+        
+        const btnW = 240 * scale, btnH = 54 * scale;
         const btnX = cx - btnW / 2;
-        const btnY = cy + 76;
+        const btnY = cy + 76 * scale;
         const btnGrd = ctx.createLinearGradient(btnX, btnY, btnX + btnW, btnY + btnH);
         const btnPulse = (Math.sin(t * 2.5) + 1) * 0.5;
         btnGrd.addColorStop(0, `rgba(220,100,0,${0.8 + btnPulse * 0.2})`);
@@ -1448,18 +1447,20 @@ export class Game {
         ctx.fill();
         ctx.restore();
         ctx.fillStyle = '#fff';
-        ctx.font = 'bold 22px Orbitron, Arial';
+        ctx.font = `bold ${22 * scale}px Orbitron, Arial`;
         ctx.textAlign = 'center';
-        ctx.fillText('▶  DEPLOY', cx, btnY + 35);
+        ctx.fillText('▶  DEPLOY', cx, btnY + 35 * scale);
 
         // Player count info
         ctx.fillStyle = 'rgba(255,255,255,0.35)';
-        ctx.font = '12px Rajdhani, Arial';
-        ctx.fillText(`${mode.botCount + 1} Players  ·  Last One Standing Wins`, cx, cy + 150);
-        ctx.fillText('WASD: Move  ·  Mouse: Aim & Fire  ·  F: Interact  ·  R: Reload  ·  Tab: Inventory', cx, cy + 168);
+        ctx.font = `${12 * scale}px Rajdhani, Arial`;
+        ctx.fillText(`${mode.botCount + 1} Players  ·  Last One Standing Wins`, cx, cy + 150 * scale);
+        if (!isMobile) ctx.fillText('WASD: Move  ·  Mouse: Aim & Fire  ·  F: Interact  ·  R: Reload  ·  Tab: Inventory', cx, cy + 168 * scale);
     }
 
     drawDeathScreen() {
+        const isMobile = this.canvas.width < 800;
+        const scale = isMobile ? 0.75 : 1.0;
         const ctx = this.ctx;
         const cx = this.canvas.width / 2;
         const cy = this.canvas.height / 2;
@@ -1478,11 +1479,11 @@ export class Game {
         // ELIMINATED title
         ctx.save();
         ctx.shadowColor = 'rgba(255,50,50,0.8)';
-        ctx.shadowBlur = 30;
+        ctx.shadowBlur = 30 * scale;
         ctx.fillStyle = '#f44';
-        ctx.font = 'bold 52px Orbitron, Arial';
+        ctx.font = `bold ${52 * scale}px Orbitron, Arial`;
         ctx.textAlign = 'center';
-        ctx.fillText('ELIMINATED', cx, cy - 90);
+        ctx.fillText('ELIMINATED', cx, cy - 90 * scale);
         ctx.restore();
 
         // Killed by
@@ -1494,16 +1495,17 @@ export class Game {
 
         // Placement
         ctx.fillStyle = '#fff';
-        ctx.font = 'bold 30px Orbitron, Arial';
-        ctx.fillText(`#${this.aliveCount + 1} of 30`, cx, cy - 22);
+        ctx.font = `bold ${30 * scale}px Orbitron, Arial`;
+        ctx.fillText(`#${this.aliveCount + 1} of 30`, cx, cy - 22 * scale);
 
         // Stats panel
-        const panelW = 340;
+        // Stats section
+        const panelW = 340 * scale;
         const panelX = cx - panelW / 2;
-        const panelY = cy - 8;
+        const panelY = cy - 8 * scale;
         ctx.fillStyle = 'rgba(0,0,0,0.5)';
         ctx.beginPath();
-        ctx.roundRect(panelX, panelY, panelW, 140, 6);
+        ctx.roundRect(panelX, panelY, panelW, 140 * scale, 6 * scale);
         ctx.fill();
         ctx.strokeStyle = 'rgba(244,68,68,0.3)';
         ctx.lineWidth = 1;
@@ -1543,6 +1545,8 @@ export class Game {
     }
 
     drawWinScreen() {
+        const isMobile = this.canvas.width < 800;
+        const scale = isMobile ? 0.75 : 1.0;
         const ctx = this.ctx;
         ctx.fillStyle = 'rgba(0,0,0,0.5)';
         ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -1564,12 +1568,12 @@ export class Game {
 
         ctx.save();
         ctx.shadowColor = `rgba(255,210,0,${0.8 + glow * 0.2})`;
-        ctx.shadowBlur = 40 + glow * 30;
+        ctx.shadowBlur = (40 + glow * 30) * scale;
         ctx.fillStyle = '#f5c842';
-        ctx.font = 'bold 52px Orbitron, Arial';
+        ctx.font = `bold ${52 * scale}px Orbitron, Arial`;
         ctx.textAlign = 'center';
-        ctx.fillText('WINNER', cx, cy - 90);
-        ctx.fillText('WINNER!', cx, cy - 35);
+        ctx.fillText('WINNER', cx, cy - 90 * scale);
+        ctx.fillText('WINNER!', cx, cy - 35 * scale);
         ctx.restore();
 
         ctx.fillStyle = 'rgba(255,255,255,0.55)';
@@ -1577,12 +1581,12 @@ export class Game {
         ctx.fillText('CHICKEN DINNER', cx, cy - 5);
 
         // Stats
-        const panelW = 320;
+        const panelW = 320 * scale;
         const panelX = cx - panelW / 2;
-        const panelY = cy + 12;
+        const panelY = cy + 12 * scale;
         ctx.fillStyle = 'rgba(0,0,0,0.5)';
         ctx.beginPath();
-        ctx.roundRect(panelX, panelY, panelW, 120, 6);
+        ctx.roundRect(panelX, panelY, panelW, 120 * scale, 6 * scale);
         ctx.fill();
         ctx.strokeStyle = 'rgba(255,200,0,0.3)';
         ctx.lineWidth = 1;

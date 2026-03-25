@@ -39,8 +39,10 @@ export class HUD {
         ctx.roundRect(x, y, w, h, r);
     }
 
-    draw(ctx, canvas, player, aliveCount, zone) {
+    draw(ctx, canvas, player, aliveCount, zone, input) {
         const W = canvas.width, H = canvas.height;
+        const isMobile = W < 800;
+        const scale = isMobile ? 0.8 : 1.0;
 
         // -- Armor bar (bottom center, above health) --
         const hpBarW = 220;
@@ -360,10 +362,81 @@ export class HUD {
         }
 
         // -- Controls hint (bottom left, subtle) --
-        ctx.fillStyle = 'rgba(255,255,255,0.25)';
-        ctx.font = '10px Rajdhani, Arial';
-        ctx.textAlign = 'left';
-        ctx.fillText('WASD Move · Shift Boost · C Crouch · Z Prone · Q Swap · R Reload · F Pick · E Vehicle · G Frag · H Smoke · M Mine · 3 Bandage · 4 Medkit · Tab Inv', 10, H - 8);
+        if (!input.touchActive) {
+            ctx.fillStyle = 'rgba(255,255,255,0.25)';
+            ctx.font = '10px Rajdhani, Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('WASD Move · Shift Boost · C Crouch · Z Prone · Q Swap · R Reload · F Pick · E Vehicle · G Frag · H Smoke · M Mine · 3 Bandage · 4 Medkit · Tab Inv', 10, H - 8);
+        }
+
+        // -- Mobile Controls --
+        if (input.touchActive) {
+            this.drawVirtualJoystick(ctx, input.joystick, 100, H - 100);
+            this.drawMobileButtons(ctx, canvas, input, player);
+        }
+    }
+
+    drawVirtualJoystick(ctx, joy, x, y) {
+        // Base
+        ctx.beginPath();
+        ctx.arc(x, y, 50, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.1)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        if (joy.active) {
+            // Knob
+            const kx = x + joy.dx * 40;
+            const ky = y + joy.dy * 40;
+            ctx.beginPath();
+            ctx.arc(kx, ky, 25, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.stroke();
+        }
+    }
+
+    drawMobileButtons(ctx, canvas, input, player) {
+        const W = canvas.width, H = canvas.height;
+        const btnSize = 50;
+        const padding = 15;
+        
+        const buttons = [
+            { id: 'fire',      x: W - 70,  y: H - 160, label: '🔥', key: null },
+            { id: 'reload',    x: W - 140, y: H - 90,  label: '⟳', key: 'r' },
+            { id: 'interact',  x: W - 140, y: H - 160, label: 'F', key: 'f' },
+            { id: 'inventory', x: W - 70,  y: H - 230, label: '🎒', key: 'tab' },
+            { id: 'heals',     x: W - 210, y: H - 90,  label: '➕', key: '3' }, // simplified: use bandage/medkit
+            { id: 'prone',     x: W - 210, y: H - 160, label: '▬', key: 'z' }
+        ];
+
+        buttons.forEach(btn => {
+            const isDown = input.mouse.down && 
+                           input.mouse.x > btn.x - btnSize/2 && input.mouse.x < btn.x + btnSize/2 &&
+                           input.mouse.y > btn.y - btnSize/2 && input.mouse.y < btn.y + btnSize/2;
+            
+            input.buttonStates[btn.id] = isDown;
+            if (isDown && input.mouse.clicked && btn.key) {
+                input.justPressed[btn.key] = true;
+                input.keys[btn.key] = true;
+            }
+
+            ctx.beginPath();
+            ctx.arc(btn.x, btn.y, btnSize/2, 0, Math.PI * 2);
+            ctx.fillStyle = isDown ? 'rgba(255,200,0,0.4)' : 'rgba(0,0,0,0.4)';
+            ctx.fill();
+            ctx.strokeStyle = isDown ? '#fc4' : 'rgba(255,255,255,0.3)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(btn.label, btn.x, btn.y + 7);
+        });
     }
 
     drawKillFeedOnly(ctx, canvas) {
