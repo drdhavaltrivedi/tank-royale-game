@@ -1,0 +1,14 @@
+{
+  "name": "tank-royale",
+  "version": "1.0.0",
+  "description": "Tank Royale - LAN multiplayer battle royale",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "puppeteer": "^24.40.0",
+    "ws": "^8.18.0"
+  }
+}

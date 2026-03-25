@@ -1,0 +1,116 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: Arial, sans-serif; }
+
+#game-container { width: 100%; height: 100%; }
+#game-container canvas { display: block; }
+
+/* HUD Overlay */
+#hud { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+
+#crosshair {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    color: rgba(255,255,255,0.7); font-size: 24px; font-weight: bold; text-shadow: 0 0 3px rgba(0,0,0,0.8);
+}
+
+#top-bar {
+    position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+    text-align: center; color: #fff;
+}
+#alive-count { background: rgba(0,0,0,0.6); padding: 4px 16px; border-radius: 4px; font-weight: bold; font-size: 14px; }
+#kills-count { color: #ec4; font-size: 12px; margin-top: 4px; }
+#zone-timer { color: #8cf; font-size: 11px; margin-top: 2px; }
+
+#kill-feed {
+    position: absolute; top: 80px; right: 20px; text-align: right;
+    font-size: 12px; color: #ccc;
+}
+.kill-entry {
+    background: rgba(0,0,0,0.5); padding: 3px 10px; margin-bottom: 3px;
+    border-radius: 3px; animation: fadeIn 0.3s;
+}
+.kill-entry.player-involved { color: #ff8; }
+
+#bottom-bar {
+    position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 20px; align-items: flex-end;
+}
+
+#health-section { width: 220px; }
+.bar-container {
+    background: rgba(0,0,0,0.6); border-radius: 3px; height: 16px; margin-bottom: 4px;
+    position: relative; overflow: hidden;
+}
+.bar-container span { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); color: #fff; font-size: 10px; font-weight: bold; text-shadow: 0 1px 2px #000; }
+.bar { height: 100%; transition: width 0.2s; border-radius: 3px; }
+.bar.green { background: #4c4; }
+.bar.red { background: #c44; }
+.bar.yellow { background: #fc4; }
+.bar.blue { background: #48f; }
+#stamina-bar-container { height: 6px; }
+
+#weapon-slots { display: flex; flex-direction: column; gap: 4px; }
+.weapon-slot {
+    background: rgba(0,0,0,0.6); padding: 6px 12px; border-radius: 4px;
+    display: flex; gap: 8px; align-items: center; min-width: 130px; border: 1px solid rgba(255,255,255,0.15);
+}
+.weapon-slot.active { border-color: #ec4; background: rgba(255,200,50,0.1); }
+.slot-num { color: #666; font-size: 10px; }
+.weapon-name { color: #fff; font-weight: bold; font-size: 12px; flex: 1; }
+.weapon-ammo { color: #aaa; font-size: 11px; }
+#grenade-count { color: #8c8; font-size: 11px; padding: 4px 12px; background: rgba(0,0,0,0.4); border-radius: 3px; }
+
+#controls-hint {
+    position: absolute; bottom: 5px; left: 10px;
+    color: rgba(255,255,255,0.35); font-size: 10px;
+}
+
+#notifications {
+    position: absolute; top: 40%; left: 50%; transform: translateX(-50%);
+    text-align: center; color: #fff; font-size: 18px; font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+}
+.notification { animation: fadeUp 2s forwards; }
+
+#damage-vignette {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; opacity: 0; transition: opacity 0.1s;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(200,0,0,0.4) 100%);
+}
+
+#minimap-canvas {
+    position: absolute; top: 15px; right: 15px;
+    background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.3); border-radius: 4px;
+}
+
+/* Menu & Screens */
+#menu-screen, #death-screen, #win-screen {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: rgba(10,10,20,0.95); color: #fff; z-index: 20;
+}
+#menu-screen h1, #death-screen h1, #win-screen h1 { font-size: 48px; color: #ec4; margin-bottom: 10px; }
+.subtitle { color: #888; font-size: 18px; margin-bottom: 30px; }
+.info { color: #666; font-size: 14px; margin-top: 20px; }
+.red { color: #f44 !important; }
+.gold { color: #ec4 !important; text-align: center; }
+
+button {
+    background: #e84; color: #fff; border: none; padding: 14px 40px;
+    font-size: 18px; font-weight: bold; cursor: pointer; border-radius: 6px;
+    margin: 8px; pointer-events: all;
+}
+button:hover { background: #f95; }
+
+#death-stats, #win-stats {
+    background: rgba(0,0,0,0.4); padding: 15px 30px; border-radius: 8px;
+    margin: 15px 0; font-size: 13px; color: #aaa; min-width: 280px;
+}
+#death-stats div, #win-stats div {
+    display: flex; justify-content: space-between; padding: 4px 0;
+}
+#death-stats span:last-child, #win-stats span:last-child { color: #fff; font-weight: bold; }
+#killed-by { color: #faa; font-size: 16px; }
+#placement { color: #fff; font-size: 24px; font-weight: bold; margin: 10px 0; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes fadeUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-40px); } }

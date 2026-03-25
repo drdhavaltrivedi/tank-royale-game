@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tank Royale</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+        body { background:#000; overflow:hidden; font-family:'Rajdhani','Arial',sans-serif; }
+
+        canvas { display:block; width:100vw; height:100vh; cursor:none; }
+
+        /* ── Lobby overlay ─────────────────────────────────────────────────── */
+        #lobby {
+            position:fixed; inset:0;
+            display:flex; align-items:center; justify-content:center;
+            background:linear-gradient(135deg,#05050f 0%,#0a0a1a 60%,#000810 100%);
+            z-index:100;
+        }
+        #lobby::before {
+            content:'';
+            position:absolute; inset:0;
+            background:
+                radial-gradient(ellipse 60% 40% at 20% 30%, rgba(0,150,255,.08) 0%, transparent 70%),
+                radial-gradient(ellipse 50% 50% at 80% 70%, rgba(255,150,0,.06) 0%, transparent 70%);
+            pointer-events:none;
+        }
+
+        #lobbyPanel {
+            position:relative;
+            width:min(520px,94vw);
+            background:rgba(10,12,30,.92);
+            border:1px solid rgba(0,160,255,.25);
+            border-radius:14px;
+            padding:38px 44px 34px;
+            box-shadow:0 0 60px rgba(0,120,255,.18), 0 0 0 1px rgba(255,255,255,.04) inset;
+            backdrop-filter:blur(12px);
+        }
+
+        .logo {
+            text-align:center; margin-bottom:6px;
+            font-family:'Orbitron',Arial; font-size:36px; font-weight:900;
+            background:linear-gradient(135deg,#f5c842,#ff8c00);
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+            background-clip:text;
+            text-shadow:none;
+            filter:drop-shadow(0 0 16px rgba(255,160,0,.4));
+        }
+        .tagline {
+            text-align:center; color:rgba(0,200,255,.6);
+            font-size:12px; letter-spacing:3px; text-transform:uppercase;
+            margin-bottom:26px;
+        }
+
+        .field-group { margin-bottom:18px; }
+        .field-group label {
+            display:block; color:rgba(255,255,255,.45);
+            font-size:11px; letter-spacing:2px; text-transform:uppercase;
+            margin-bottom:6px;
+        }
+        .field-group input, .field-group select {
+            width:100%; padding:11px 14px;
+            background:rgba(255,255,255,.06);
+            border:1px solid rgba(255,255,255,.15);
+            border-radius:7px; color:#fff;
+            font-family:inherit; font-size:15px;
+            outline:none; transition:border-color .2s, box-shadow .2s;
+        }
+        .field-group input:focus, .field-group select:focus {
+            border-color:rgba(0,160,255,.7);
+            box-shadow:0 0 0 3px rgba(0,160,255,.12);
+        }
+        .field-group input::placeholder { color:rgba(255,255,255,.25); }
+        .field-group select option { background:#12141f; }
+
+        .row { display:flex; gap:10px; }
+        .row .field-group { flex:1; }
+
+        .divider {
+            display:flex; align-items:center; gap:12px;
+            color:rgba(255,255,255,.2); font-size:12px;
+            margin:20px 0;
+        }
+        .divider::before, .divider::after { content:''; flex:1; height:1px; background:rgba(255,255,255,.1); }
+
+        .btn {
+            width:100%; padding:13px; border:none; border-radius:8px;
+            font-family:'Orbitron',Arial; font-size:14px; font-weight:700;
+            cursor:pointer; transition:all .2s; letter-spacing:1px;
+        }
+        .btn-solo {
+            background:linear-gradient(135deg,#1a3a1a,#2a5a2a);
+            color:#8f8; border:1px solid rgba(100,220,100,.3);
+        }
+        .btn-solo:hover { background:linear-gradient(135deg,#2a5a2a,#3a7a3a); transform:translateY(-1px); box-shadow:0 6px 20px rgba(0,200,0,.2); }
+
+        .btn-host {
+            background:linear-gradient(135deg,#1a1a3a,#2a2a6a);
+            color:#aaf; border:1px solid rgba(100,100,220,.4);
+        }
+        .btn-host:hover { background:linear-gradient(135deg,#2a2a5a,#3a3a8a); transform:translateY(-1px); box-shadow:0 6px 20px rgba(80,80,255,.25); }
+
+        .btn-join {
+            background:linear-gradient(135deg,#2a1a10,#5a3010);
+            color:#fc8; border:1px solid rgba(200,140,50,.35);
+        }
+        .btn-join:hover { background:linear-gradient(135deg,#3a2a14,#7a4820); transform:translateY(-1px); box-shadow:0 6px 20px rgba(255,160,0,.2); }
+
+        .btn-start {
+            background:linear-gradient(135deg,#b06000,#f09020);
+            color:#fff; font-size:16px;
+        }
+        .btn-start:hover { filter:brightness(1.1); transform:translateY(-1px); box-shadow:0 8px 24px rgba(255,140,0,.35); }
+        .btn-start:disabled { opacity:.45; cursor:not-allowed; transform:none; }
+        /* Network section */
+        #roomCodeBox {
+            text-align:center; padding:14px;
+            background:rgba(0,0,0,.4); border:1px solid rgba(0,160,255,.25);
+            border-radius:8px; margin-bottom:14px;
+        }
+        #roomCodeBox .label { color:rgba(255,255,255,.4); font-size:11px; letter-spacing:2px; text-transform:uppercase; margin-bottom:4px; }
+        #roomCodeBox .code {
+            font-family:'Orbitron',Arial; font-size:28px; font-weight:700;
+            color:#fc4; letter-spacing:5px;
+        }
+        #roomCodeBox .copy-hint { color:rgba(255,255,255,.3); font-size:11px; margin-top:3px; }
+
+        #playersList {
+            max-height:140px; overflow-y:auto;
+            background:rgba(0,0,0,.35); border-radius:7px;
+            padding:8px; margin-bottom:14px;
+        }
+        .player-entry {
+            display:flex; align-items:center; gap:9px;
+            padding:6px 8px; border-radius:5px;
+            color:#ddd; font-size:13px;
+            border-bottom:1px solid rgba(255,255,255,.05);
+        }
+        .player-entry:last-child { border-bottom:none; }
+        .player-badge {
+            font-size:9px; padding:2px 5px; border-radius:3px;
+            font-family:'Orbitron',Arial; letter-spacing:1px;
+        }
+        .badge-host { background:rgba(255,180,0,.2); color:#fc4; border:1px solid rgba(255,180,0,.3); }
+        .badge-you  { background:rgba(0,200,255,.15); color:#8cf; border:1px solid rgba(0,200,255,.25); }
+
+        #errorMsg {
+            color:#f66; font-size:13px; text-align:center;
+            min-height:20px; margin-top:10px;
+            opacity:0; transition:opacity .3s;
+        }
+        #errorMsg.show { opacity:1; }
+
+        #statusMsg {
+            color:rgba(0,200,255,.7); font-size:12px; text-align:center;
+            min-height:16px; letter-spacing:1px;
+        }
+
+        /* Chat overlay (in-game) */
+        #chatBox {
+            position:fixed; bottom:75px; left:12px;
+            width:280px; z-index:50;
+            display:none;
+        }
+        #chatLog {
+            background:rgba(0,0,0,.55); border-radius:6px;
+            padding:6px 8px; max-height:120px; overflow-y:auto;
+            margin-bottom:5px; font-size:12px; color:#ccc;
+        }
+        #chatLog p { margin:2px 0; }
+        #chatLog p span { color:#8cf; font-weight:700; }
+        #chatInput {
+            width:100%; padding:6px 10px;
+            background:rgba(0,0,0,.7); border:1px solid rgba(255,255,255,.2);
+            border-radius:5px; color:#fff; font-family:inherit; font-size:12px;
+            outline:none; display:none;
+        }
+
+        /* Multiplayer scoreboard (in-game, top-left) */
+        #mpScoreboard {
+            position:fixed; top:12px; left:12px;
+            background:rgba(0,0,0,.6); border:1px solid rgba(255,255,255,.1);
+            border-radius:7px; padding:8px 12px;
+            font-size:12px; color:#ddd;
+            z-index:50; display:none; min-width:150px;
+        }
+        #mpScoreboard .sb-title {
+            font-family:'Orbitron',Arial; font-size:9px; color:rgba(0,200,255,.5);
+            letter-spacing:2px; text-transform:uppercase; margin-bottom:5px;
+            border-bottom:1px solid rgba(255,255,255,.1); padding-bottom:4px;
+        }
+        .sb-row { display:flex; justify-content:space-between; gap:12px; padding:2px 0; }
+        .sb-row.you { color:#8cf; }
+        .sb-row.dead { opacity:.4; text-decoration:line-through; }
+    </style>
+</head>
+<body>
+
+<!-- ── Game canvas ─────────────────────────────────────────────────────────── -->
+<canvas id="gameCanvas" tabindex="1"></canvas>
+
+<!-- ── In-game chat ────────────────────────────────────────────────────────── -->
+<div id="chatBox">
+    <div id="chatLog"></div>
+    <input id="chatInput" placeholder="Press Enter to send…" maxlength="100">
+</div>
+
+<!-- ── Multiplayer scoreboard ──────────────────────────────────────────────── -->
+<div id="mpScoreboard">
+    <div class="sb-title">Players</div>
+    <div id="sbRows"></div>
+</div>
+
+<!-- ── Lobby overlay ───────────────────────────────────────────────────────── -->
+<div id="lobby">
+    <div id="lobbyPanel">
+        <div class="logo">TANK ROYALE</div>
+        <div class="tagline">Battle Until One Remains</div>
+
+        <!-- Name + class -->
+        <div class="row">
+            <div class="field-group">
+                <label>Your Name</label>
+                <input id="playerName" type="text" maxlength="20" placeholder="Enter callsign…" autocomplete="off" spellcheck="false">
+            </div>
+            <div class="field-group">
+                <label>Tank Class</label>
+                <select id="tankClassSel">
+                    <option value="light">⚡ Light (Fast)</option>
+                    <option value="medium" selected>⚙️ Medium (Balanced)</option>
+                    <option value="heavy">🛡️ Heavy (Armored)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Mode buttons -->
+        <div class="row" style="gap:8px; margin-bottom:0;">
+            <button class="btn btn-solo"  id="soloBtn"  title="Play alone vs bots">▶ Solo</button>
+            <button class="btn btn-host"  id="hostBtn"  title="Create a LAN room">⚙ Host</button>
+            <button class="btn btn-join"  id="joinBtn"  title="Join a friend's room">↗ Join</button>
+        </div>
+
+        <div class="divider">multiplayer</div>
+
+        <!-- Network section (host/join) -->
+        <div id="networkSection" style="display:none">
+            <!-- Shown after creating -->
+            <div id="roomCodeBox" style="display:none">
+                <div class="label">Room Code — Share with friends on your network</div>
+                <div class="code" id="roomCodeText">------</div>
+                <div class="copy-hint">Click code to copy</div>
+            </div>
+
+            <!-- Room input for joining -->
+            <div class="field-group" id="joinInputGroup" style="display:none">
+                <label>Room Code</label>
+                <div style="display:flex; gap:8px;">
+                    <input id="roomCodeInput" type="text" maxlength="8" placeholder="e.g. AB12CD"
+                           autocomplete="off" spellcheck="false"
+                           style="text-transform:uppercase; letter-spacing:3px; font-family:'Orbitron',Arial; font-size:18px; flex:1;">
+                    <button class="btn btn-join" id="submitJoinBtn" style="padding:0 20px; width:auto; flex-shrink:0;">JOIN</button>
+                </div>
+            </div>
+
+            <!-- Lobby player list -->
+            <div id="playersList"></div>
+            <div id="statusMsg"></div>
+
+            <!-- Start button (host only) -->
+            <button class="btn btn-start" id="startGameBtn" style="display:none" disabled>WAITING FOR PLAYERS…</button>
+        </div>
+
+        <div id="errorMsg"></div>
+    </div>
+</div>
+
+<!-- ── Game script ─────────────────────────────────────────────────────────── -->
+<script type="module">
+import { Game } from './js/game.js';
+import { Network } from './js/network.js';
+
+// ── Elements ──────────────────────────────────────────────────────────────────
+const lobby          = document.getElementById('lobby');
+const soloBtn        = document.getElementById('soloBtn');
+const hostBtn        = document.getElementById('hostBtn');
+const joinBtn        = document.getElementById('joinBtn');
+const networkSection = document.getElementById('networkSection');
+const roomCodeBox    = document.getElementById('roomCodeBox');
+const roomCodeText   = document.getElementById('roomCodeText');
+const joinInputGroup = document.getElementById('joinInputGroup');
+const roomCodeInput  = document.getElementById('roomCodeInput');
+const submitJoinBtn  = document.getElementById('submitJoinBtn');
+const playersList    = document.getElementById('playersList');
+const startGameBtn   = document.getElementById('startGameBtn');
+const statusMsg      = document.getElementById('statusMsg');
+const errorMsg       = document.getElementById('errorMsg');
+const chatBox        = document.getElementById('chatBox');
+const chatLog        = document.getElementById('chatLog');
+const chatInput      = document.getElementById('chatInput');
+const mpScoreboard   = document.getElementById('mpScoreboard');
+const sbRows         = document.getElementById('sbRows');
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let game    = null;
+let network = null;
+let myId    = null;
+let isHost  = false;
+let lobbyPlayers = {};  // id → {name, tankClass, isHost}
+
+function showError(msg, dur=4000) {
+    errorMsg.textContent = msg;
+    errorMsg.classList.add('show');
+    setTimeout(() => errorMsg.classList.remove('show'), dur);
+}
+
+function setStatus(msg) { statusMsg.textContent = msg; }
+
+// ── Render lobby player list ──────────────────────────────────────────────────
+function renderLobbyPlayers() {
+    playersList.innerHTML = '';
+    Object.values(lobbyPlayers).forEach(p => {
+        const div = document.createElement('div');
+        div.className = 'player-entry';
+        const badges = [];
+        if (p.isHost)   badges.push(`<span class="player-badge badge-host">HOST</span>`);
+        if (p.id===myId) badges.push(`<span class="player-badge badge-you">YOU</span>`);
+        div.innerHTML = `${badges.join('')} ${p.name} <span style="color:rgba(255,255,255,.3);font-size:11px;margin-left:auto">${p.tankClass}</span>`;
+        playersList.appendChild(div);
+    });
+}
+
+// ── Connect to WS server ──────────────────────────────────────────────────────
+async function connectNetwork() {
+    const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+    const url   = `${proto}://${location.host}`;
+    network = new Network();
+
+    network.on('roomCreated', msg => {
+        myId   = msg.playerId;
+        isHost = true;
+        network.playerId = myId;
+        network.isHost   = isHost;
+        lobbyPlayers     = msg.players;
+        roomCodeText.textContent = msg.roomId;
+        roomCodeBox.style.display = '';
+        startGameBtn.style.display = '';
+        startGameBtn.disabled = false;
+        startGameBtn.textContent = '▶ START GAME';
+        setStatus('Waiting for players to join…');
+        renderLobbyPlayers();
+    });
+
+    network.on('roomJoined', msg => {
+        myId   = msg.playerId;
+        isHost = false;
+        network.playerId = myId;
+        network.isHost   = isHost;
+        lobbyPlayers     = msg.players;
+        roomCodeBox.style.display = '';
+        roomCodeText.textContent  = msg.roomId;
+        setStatus('Waiting for host to start…');
+        renderLobbyPlayers();
+    });
+
+    network.on('playerJoined', msg => {
+        lobbyPlayers[msg.player.id] = { ...msg.player, isHost:false };
+        setStatus(`${msg.player.name} joined!`);
+        renderLobbyPlayers();
+        if (isHost) { startGameBtn.disabled = false; startGameBtn.textContent = '▶ START GAME'; }
+    });
+
+    network.on('playerLeft', msg => {
+        const name = lobbyPlayers[msg.id]?.name || '?';
+        delete lobbyPlayers[msg.id];
+        setStatus(`${name} left.`);
+        renderLobbyPlayers();
+    });
+
+    network.on('promoted', () => {
+        isHost = true;
+        network.isHost = true;
+        startGameBtn.style.display = '';
+        startGameBtn.disabled = false;
+        startGameBtn.textContent = '▶ START GAME (You are now Host)';
+    });
+
+    network.on('error', msg => showError(msg.message));
+
+    network.on('gameStart', msg => {
+        // Close lobby and start game in multiplayer mode
+        startMultiplayerGame(msg);
+    });
+
+    network.on('disconnected', () => {
+        showError('Disconnected from server.');
+    });
+
+    try {
+        setStatus('Connecting…');
+        await network.connect(url);
+        setStatus('Connected ✓');
+        return true;
+    } catch (e) {
+        showError('Cannot reach game server. Make sure you opened this page via the server (node server.js).');
+        network = null;
+        return false;
+    }
+}
+
+// ── Lobby button handlers ─────────────────────────────────────────────────────
+soloBtn.onclick = () => {
+    const name = document.getElementById('playerName').value.trim() || 'Commander';
+    const tc   = document.getElementById('tankClassSel').value;
+    lobby.style.display = 'none';
+    game = new Game(null, name, tc);
+};
+
+hostBtn.onclick = async () => {
+    const name = document.getElementById('playerName').value.trim();
+    if (!name) { showError('Please enter your name first!'); return; }
+    const tc = document.getElementById('tankClassSel').value;
+    networkSection.style.display = '';
+    joinInputGroup.style.display  = 'none';
+    if (!await connectNetwork()) return;
+    network.createRoom(name, tc);
+};
+
+joinBtn.onclick = async () => {
+    const name = document.getElementById('playerName').value.trim();
+    if (!name) { showError('Please enter your name first!'); return; }
+    const tc = document.getElementById('tankClassSel').value;
+    networkSection.style.display  = '';
+    joinInputGroup.style.display  = '';
+    roomCodeBox.style.display     = 'none';
+    startGameBtn.style.display    = 'none';
+    setStatus('Enter the room code and press Join ↓');
+
+    const doJoin = async () => {
+        if (roomCodeInput.value.length >= 4) {
+            if (!network && !await connectNetwork()) return;
+            network.joinRoom(roomCodeInput.value.toUpperCase(), name, tc);
+        }
+    };
+
+    submitJoinBtn.onclick = doJoin;
+    roomCodeInput.onkeydown = async (e) => {
+        if (e.key === 'Enter') doJoin();
+    };
+
+    if (!await connectNetwork()) return;
+    roomCodeInput.focus();
+};
+
+startGameBtn.onclick = () => {
+    if (!isHost || !network) return;
+    const tc  = document.getElementById('tankClassSel').value;
+    network.startGame('grassland', 'Classic Solo');
+};
+
+// Copy room code on click
+roomCodeText.parentElement.onclick = () => {
+    navigator.clipboard.writeText(roomCodeText.textContent).catch(()=>{});
+    setStatus('Room code copied!');
+    setTimeout(() => setStatus('Waiting for players…'), 2000);
+};
+
+// ── Multiplayer game start ────────────────────────────────────────────────────
+function startMultiplayerGame(msg) {
+    const name = document.getElementById('playerName').value.trim() || 'Commander';
+    const tc   = document.getElementById('tankClassSel').value;
+
+    lobby.style.display    = 'none';
+    chatBox.style.display  = '';
+    mpScoreboard.style.display = '';
+
+    game = new Game(network, name, tc, msg);
+
+    // Network tick handler — update remote players and zone in game
+    network.on('tick', tickMsg => {
+        if (game) game.applyNetworkTick(tickMsg);
+    });
+
+    network.on('bulletFired', bfMsg => {
+        if (game) game.spawnRemoteBullet(bfMsg);
+    });
+
+    network.on('playerHit', hitMsg => {
+        if (game && network.playerId === hitMsg.targetId) {
+            game.player.takeDamage(hitMsg.damage, { name: hitMsg.killerName, isPlayer: false }, false);
+            game.audio.playHit();
+        }
+    });
+
+    network.on('playerDied', pdMsg => {
+        if (game) { game.hud && game.hud.addNotification(`${pdMsg.killerName || '?'} eliminated a player`); }
+    });
+
+    network.on('playerLeft', plMsg => {
+        if (game) game.removeRemotePlayer(plMsg.id);
+    });
+
+    network.on('chatMessage', cmMsg => {
+        addChatMessage(cmMsg.from, cmMsg.text);
+    });
+
+    // Sync player state to server
+    network.startSync(
+        () => game ? game.player : null,
+        () => game ? game.bots    : []
+    );
+
+    // Scoreboard update
+    setInterval(() => {
+        if (!game) return;
+        sbRows.innerHTML = '';
+        const entries = [];
+        // Own player
+        if (game.player) entries.push({ name, kills: game.player.kills, alive: game.player.alive, isYou: true });
+        // Remote players
+        game.remotePlayers && game.remotePlayers.forEach(rp => {
+            entries.push({ name: rp.name, kills: rp.kills, alive: rp.alive, isYou: false });
+        });
+        entries.sort((a,b) => b.kills - a.kills);
+        entries.forEach(e => {
+            const div = document.createElement('div');
+            div.className = 'sb-row' + (e.isYou?' you':'') + (!e.alive?' dead':'');
+            div.innerHTML = `<span>${e.name}</span><span>${e.kills}K</span>`;
+            sbRows.appendChild(div);
+        });
+    }, 1000);
+}
+
+// ── Chat ──────────────────────────────────────────────────────────────────────
+function addChatMessage(from, text) {
+    const p = document.createElement('p');
+    p.innerHTML = `<span>${from}:</span> ${text}`;
+    chatLog.appendChild(p);
+    chatLog.scrollTop = chatLog.scrollHeight;
+    // Auto-hide old msgs
+    if (chatLog.children.length > 30) chatLog.removeChild(chatLog.firstChild);
+}
+
+document.addEventListener('keydown', e => {
+    if (!network || lobby.style.display !== 'none') return;
+    if (e.key === 'Enter' && chatInput.style.display === 'none') {
+        chatInput.style.display = '';
+        chatInput.focus();
+        e.preventDefault();
+    } else if (e.key === 'Escape' && chatInput.style.display !== 'none') {
+        chatInput.style.display = 'none';
+        document.getElementById('gameCanvas').focus();
+    }
+});
+
+chatInput.onkeydown = e => {
+    if (e.key === 'Enter') {
+        const text = chatInput.value.trim();
+        if (text && network) {
+            network.sendChat(text);
+            addChatMessage('You', text);
+        }
+        chatInput.value = '';
+        chatInput.style.display = 'none';
+        document.getElementById('gameCanvas').focus();
+        e.preventDefault();
+    }
+};
+</script>
+
+</body>
+</html>
